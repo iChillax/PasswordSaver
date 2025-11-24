@@ -1,0 +1,5 @@
+- The web application where store username/password or secrets like tokens and urls link
+- The web application is integrated the chatbot for search and provide the information of secrets by nature language
+- The backend uses Golang with Gin framework
+- The frontend uses Vuejs and tailwind for css
+- Up to date technical
