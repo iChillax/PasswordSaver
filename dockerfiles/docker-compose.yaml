@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   mongodb:
-    image: mongo:7.0
+    image: mongo:8.0
     container_name: secrets_manager_mongodb
     platform: linux/arm64
     ports:
@@ -22,69 +20,84 @@ services:
       timeout: 5s
       retries: 5
 
-  ollama:
-    image: ollama/ollama:latest
-    container_name: secrets_manager_ollama
-    platform: linux/arm64
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
     networks:
       - secrets_network
-    environment:
-      - OLLAMA_HOST=0.0.0.0:11434
-    healthcheck:
-      test: curl -f http://localhost:11434/api/tags || exit 1
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  backend:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
-    container_name: secrets_manager_backend
-    platform: linux/arm64
     ports:
-      - "8080:8080"
+      - "8081:8081" # Exposes Mongo Express's default port
     environment:
-      MONGODB_URI: mongodb://${MONGODB_USER:-admin}:${MONGODB_PASSWORD:-password}@mongodb:27017
-      MONGODB_DATABASE: ${MONGODB_DATABASE:-secrets_manager}
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION: ${JWT_EXPIRATION:-24}
-      OLLAMA_API_URL: http://ollama:11434
-      GIN_MODE: ${GIN_MODE:-debug}
+      ME_CONFIG_MONGODB_SERVER: mongodb # Connects to the 'mongodb' service
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: password
     depends_on:
-      mongodb:
-        condition: service_healthy
-      ollama:
-        condition: service_healthy
-    networks:
-      - secrets_network
-    volumes:
-      - ../backend:/app
-    command: go run main.go
+      - mongodb # Ensures MongoDB starts before Mongo Express
 
-  frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-    container_name: secrets_manager_frontend
-    platform: linux/arm64
-    ports:
-      - "5173:5173"
-    environment:
-      VITE_API_URL: http://localhost:8080/api/v1
-    depends_on:
-      - backend
-    networks:
-      - secrets_network
-    volumes:
-      - ../frontend:/app
-      - /app/node_modules
-    command: npm run dev
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: secrets_manager_ollama
+  #   platform: linux/arm64
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   networks:
+  #     - secrets_network
+  #   environment:
+  #     - OLLAMA_HOST=0.0.0.0:11434
+  #   healthcheck:
+  #     test: curl -f http://localhost:11434/api/tags || exit 1
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # backend:
+  #   build:
+  #     context: ../backend
+  #     dockerfile: Dockerfile
+  #   container_name: secrets_manager_backend
+  #   platform: linux/arm64
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     MONGODB_URI: mongodb://${MONGODB_USER:-admin}:${MONGODB_PASSWORD:-password}@mongodb:27017
+  #     MONGODB_DATABASE: ${MONGODB_DATABASE:-secrets_manager}
+  #     ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+  #     JWT_SECRET: ${JWT_SECRET}
+  #     JWT_EXPIRATION: ${JWT_EXPIRATION:-24}
+  #     # OLLAMA_API_URL: http://ollama:11434
+  #     GIN_MODE: ${GIN_MODE:-debug}
+  #   depends_on:
+  #     mongodb:
+  #       condition: service_healthy
+  #     # ollama:
+  #     #   condition: service_healthy
+  #   networks:
+  #     - secrets_network
+  #   volumes:
+  #     - ../backend:/app
+
+  # frontend:
+  #   build:
+  #     context: ../frontend
+  #     dockerfile: Dockerfile
+  #   container_name: secrets_manager_frontend
+  #   platform: linux/arm64
+  #   ports:
+  #     - "5173:5173"
+  #   environment:
+  #     VITE_API_URL: http://localhost:8080/api/v1
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - secrets_network
+  #   volumes:
+  #     - ../frontend:/app
+  #     - /app/node_modules
+  #   command: npm run dev
 
 volumes:
   mongodb_data:

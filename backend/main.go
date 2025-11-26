@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/middleware"
 	"backend/router"
 	"backend/settings"
 
@@ -9,7 +10,11 @@ import (
 
 func main() {
 	app := gin.Default()
+
+	// Add CORS middleware
+	app.Use(middleware.CORSMiddleware())
+
 	settings.Initiate()
 	router.CreateRouteTable(app)
-	app.Run("0.0.0.0:8000")
+	app.Run("0.0.0.0:8080")
 }

@@ -45,7 +45,7 @@ export const useSecretsStore = defineStore('secrets', () => {
     error.value = null
     try {
       const response = await api.post('/secrets', secretData)
-      secrets.value.push(response.data)
+      // Don't push to store's secrets array - let the component manage its own list
       return response.data
     } catch (err) {
       error.value = err.response?.data?.error || 'Failed to create secret'

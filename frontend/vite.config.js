@@ -9,7 +9,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [
     vue(),
-    vueDevTools(),
+    // vueDevTools(),
     tailwindcss(),
   ],
   resolve: {
@@ -17,4 +17,14 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://backend:8080',
+        changeOrigin: true,
+      }
+    }
+  }
 })

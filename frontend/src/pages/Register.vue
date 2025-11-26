@@ -61,9 +61,9 @@
             <li :class="{ 'line-through': /[0-9]/.test(password) }">
               ✓ At least one number
             </li>
-            <li :class="{ 'line-through': /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) }">
+            <!-- <li :class="{ 'line-through': /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) }">
               ✓ At least one special character
-            </li>
+            </li> -->
           </ul>
         </div>
 

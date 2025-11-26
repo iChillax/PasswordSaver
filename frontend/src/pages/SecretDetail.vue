@@ -4,7 +4,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
-            <router-link to="/secrets" class="text-gray-600 hover:text-gray-900 mr-4">← Back</router-link>
+            <router-link to="/dashboard" class="text-gray-600 hover:text-gray-900 mr-4">← Back</router-link>
             <h1 class="text-2xl font-bold text-gray-900">Secret Details</h1>
           </div>
         </div>
@@ -98,7 +98,7 @@ const handleDelete = async () => {
   if (confirm('Are you sure you want to delete this secret?')) {
     try {
       await secretsStore.deleteSecret(route.params.id)
-      router.push('/secrets')
+      router.push('/dashboard')
     } catch (err) {
       console.error(err)
     }

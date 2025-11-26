@@ -107,12 +107,12 @@ func CreateSecret(c *gin.Context) {
 
 	// Create secret model
 	secret := &models.Secret{
-		UserID:   userID.(primitive.ObjectID),
-		Name:     req.Name,
-		Type:     req.Type,
-		Category: req.Category,
-		Tags:     req.Tags,
-		Metadata: req.Metadata,
+		UserID:    userID.(primitive.ObjectID),
+		Name:      req.Name,
+		Type:      req.Type,
+		Category:  req.Category,
+		Tags:      req.Tags,
+		Metadata:  req.Metadata,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -188,15 +188,26 @@ func ListSecrets(c *gin.Context) {
 	}
 	defer cursor.Close(ctx)
 
-	var secrets []SecretResponse
-	if err := cursor.All(ctx, &secrets); err != nil {
+	var secretModels []models.Secret
+	if err := cursor.All(ctx, &secretModels); err != nil {
 		log.Error("Failed to decode secrets:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to decode secrets"})
 		return
 	}
 
-	if secrets == nil {
-		secrets = []SecretResponse{}
+	// Convert to response format
+	secrets := make([]SecretResponse, len(secretModels))
+	for i, secret := range secretModels {
+		secrets[i] = SecretResponse{
+			ID:        secret.ID.Hex(),
+			Name:      secret.Name,
+			Type:      secret.Type,
+			Category:  secret.Category,
+			Tags:      secret.Tags,
+			Metadata:  secret.Metadata,
+			CreatedAt: secret.CreatedAt,
+			UpdatedAt: secret.UpdatedAt,
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -462,15 +473,26 @@ func SearchSecrets(c *gin.Context) {
 	}
 	defer cursor.Close(ctx)
 
-	var secrets []SecretResponse
-	if err := cursor.All(ctx, &secrets); err != nil {
+	var secretModels []models.Secret
+	if err := cursor.All(ctx, &secretModels); err != nil {
 		log.Error("Failed to decode secrets:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to decode secrets"})
 		return
 	}
 
-	if secrets == nil {
-		secrets = []SecretResponse{}
+	// Convert to response format
+	secrets := make([]SecretResponse, len(secretModels))
+	for i, secret := range secretModels {
+		secrets[i] = SecretResponse{
+			ID:        secret.ID.Hex(),
+			Name:      secret.Name,
+			Type:      secret.Type,
+			Category:  secret.Category,
+			Tags:      secret.Tags,
+			Metadata:  secret.Metadata,
+			CreatedAt: secret.CreatedAt,
+			UpdatedAt: secret.UpdatedAt,
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
