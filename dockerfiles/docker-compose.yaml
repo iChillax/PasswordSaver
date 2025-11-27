@@ -36,23 +36,24 @@ services:
     depends_on:
       - mongodb # Ensures MongoDB starts before Mongo Express
 
-  # ollama:
-  #   image: ollama/ollama:latest
-  #   container_name: secrets_manager_ollama
-  #   platform: linux/arm64
-  #   ports:
-  #     - "11434:11434"
-  #   volumes:
-  #     - ollama_data:/root/.ollama
-  #   networks:
-  #     - secrets_network
-  #   environment:
-  #     - OLLAMA_HOST=0.0.0.0:11434
-  #   healthcheck:
-  #     test: curl -f http://localhost:11434/api/tags || exit 1
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
+  ollama:
+    image: ollama/ollama:latest
+    container_name: secrets_manager_ollama
+    platform: linux/arm64
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - secrets_network
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   # backend:
   #   build:
