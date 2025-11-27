@@ -1,0 +1,214 @@
+name: Generate Release Notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., 1.0.0)'
+        required: true
+      previous_version:
+        description: 'Previous version (e.g., 0.9.0) - leave empty for auto-detect'
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  generate-release-notes:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get previous tag
+        id: previous_tag
+        run: |
+          if [ -n "${{ github.event.inputs.previous_version }}" ]; then
+            echo "tag=v${{ github.event.inputs.previous_version }}" >> $GITHUB_OUTPUT
+          else
+            PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            if [ -z "$PREV_TAG" ]; then
+              echo "tag=" >> $GITHUB_OUTPUT
+            else
+              echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
+            fi
+          fi
+      
+      - name: Generate Release Notes
+        id: release_notes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const yaml = require('js-yaml');
+            
+            // Read release template configuration
+            const releaseConfig = yaml.load(fs.readFileSync('.github/workflows/release.yml', 'utf8'));
+            
+            const newTag = 'v${{ github.event.inputs.version }}';
+            const previousTag = '${{ steps.previous_tag.outputs.tag }}';
+            
+            // Get commits between tags
+            let commits = [];
+            if (previousTag) {
+              const compareResult = await github.rest.repos.compareCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                base: previousTag,
+                head: context.sha
+              });
+              commits = compareResult.data.commits;
+            } else {
+              // Get all commits if no previous tag
+              const commitsResult = await github.rest.repos.listCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100
+              });
+              commits = commitsResult.data;
+            }
+            
+            // Get pull requests for commits
+            const prs = new Map();
+            for (const commit of commits) {
+              const prMatch = commit.commit.message.match(/#(\d+)/);
+              if (prMatch) {
+                const prNumber = parseInt(prMatch[1]);
+                try {
+                  const pr = await github.rest.pulls.get({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: prNumber
+                  });
+                  prs.set(prNumber, pr.data);
+                } catch (error) {
+                  console.log(`Could not fetch PR #${prNumber}`);
+                }
+              }
+            }
+            
+            // Categorize changes based on labels
+            const categories = {
+              breaking: [],
+              features: [],
+              bugs: [],
+              other: []
+            };
+            
+            const excludeLabels = releaseConfig.changelog.exclude.labels || [];
+            
+            for (const [prNumber, pr] of prs) {
+              const labels = pr.labels.map(l => l.name);
+              
+              // Skip if has exclude label
+              if (labels.some(l => excludeLabels.includes(l))) {
+                continue;
+              }
+              
+              // Categorize
+              if (labels.includes('breaking-change')) {
+                categories.breaking.push({ pr, labels });
+              } else if (labels.includes('enhancement')) {
+                categories.features.push({ pr, labels });
+              } else if (labels.includes('bug')) {
+                categories.bugs.push({ pr, labels });
+              } else {
+                categories.other.push({ pr, labels });
+              }
+            }
+            
+            // Build release notes
+            let releaseNotes = `# Release ${newTag}\n\n`;
+            
+            if (previousTag) {
+              releaseNotes += `**Full Changelog**: https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${previousTag}...${newTag}\n\n`;
+            }
+            
+            releaseNotes += `## What's Changed\n\n`;
+            
+            if (categories.breaking.length > 0) {
+              releaseNotes += `### 🚨 Breaking Changes\n\n`;
+              for (const { pr } of categories.breaking) {
+                releaseNotes += `- ${pr.title} (#${pr.number}) @${pr.user.login}\n`;
+              }
+              releaseNotes += `\n`;
+            }
+            
+            if (categories.features.length > 0) {
+              releaseNotes += `### ✨ New Features\n\n`;
+              for (const { pr } of categories.features) {
+                releaseNotes += `- ${pr.title} (#${pr.number}) @${pr.user.login}\n`;
+              }
+              releaseNotes += `\n`;
+            }
+            
+            if (categories.bugs.length > 0) {
+              releaseNotes += `### 🐛 Bug Fixes\n\n`;
+              for (const { pr } of categories.bugs) {
+                releaseNotes += `- ${pr.title} (#${pr.number}) @${pr.user.login}\n`;
+              }
+              releaseNotes += `\n`;
+            }
+            
+            if (categories.other.length > 0) {
+              releaseNotes += `### 🔧 Other Changes\n\n`;
+              for (const { pr } of categories.other) {
+                releaseNotes += `- ${pr.title} (#${pr.number}) @${pr.user.login}\n`;
+              }
+              releaseNotes += `\n`;
+            }
+            
+            // Add contributors
+            const contributors = new Set();
+            for (const commit of commits) {
+              if (commit.author) {
+                contributors.add(commit.author.login);
+              }
+            }
+            
+            if (contributors.size > 0) {
+              releaseNotes += `## Contributors\n\n`;
+              releaseNotes += `Thank you to all contributors:\n`;
+              for (const contributor of contributors) {
+                releaseNotes += `- @${contributor}\n`;
+              }
+            }
+            
+            // Save to file
+            fs.writeFileSync('RELEASE_NOTES.md', releaseNotes);
+            
+            console.log('Generated Release Notes:');
+            console.log(releaseNotes);
+            
+            return releaseNotes;
+      
+      - name: Create Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const releaseNotes = fs.readFileSync('RELEASE_NOTES.md', 'utf8');
+            
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: 'v${{ github.event.inputs.version }}',
+              name: 'Release v${{ github.event.inputs.version }}',
+              body: releaseNotes,
+              draft: true,
+              prerelease: false
+            });
+            
+            console.log(`Created draft release: ${release.data.html_url}`);
+            core.summary.addRaw(`🎉 Draft release created: ${release.data.html_url}`);
+            await core.summary.write();
+      
+      - name: Upload Release Notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: RELEASE_NOTES.md

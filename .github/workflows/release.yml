@@ -1,15 +1,110 @@
+# Release Notes Template Configuration
+# This file defines how release notes are categorized and formatted
+
 changelog:
   exclude:
     labels:
       - ignore-for-release
       - dependencies
+      - duplicate
+      - invalid
+      - wontfix
+  
   categories:
     - title: 🚨 Breaking Changes
       labels:
         - breaking-change
+        - breaking
+      description: Changes that require user action or may break existing functionality
+    
     - title: ✨ New Features
       labels:
         - enhancement
+        - feature
+        - new-feature
+      description: New functionality and improvements
+    
     - title: 🐛 Bug Fixes
       labels:
         - bug
+        - bugfix
+        - fix
+      description: Bug fixes and corrections
+    
+    - title: 📚 Documentation
+      labels:
+        - documentation
+        - docs
+      description: Documentation updates and improvements
+    
+    - title: 🔧 Maintenance
+      labels:
+        - maintenance
+        - chore
+        - refactor
+      description: Code maintenance and refactoring
+    
+    - title: ⚡ Performance
+      labels:
+        - performance
+        - optimization
+      description: Performance improvements
+    
+    - title: 🔒 Security
+      labels:
+        - security
+        - vulnerability
+      description: Security fixes and improvements
+    
+    - title: 🧪 Testing
+      labels:
+        - testing
+        - tests
+      description: Test additions and improvements
+
+# Release template
+template: |
+  # Release {version}
+  
+  **Release Date**: {date}
+  **Full Changelog**: {compare_url}
+  
+  ## What's Changed
+  
+  {changelog}
+  
+  ## Installation
+  
+  ### Docker Compose
+  ```bash
+  # Pull latest images
+  docker-compose pull
+  
+  # Restart services
+  docker-compose up -d
+  ```
+  
+  ### Manual Update
+  ```bash
+  # Backend
+  cd backend
+  git pull
+  go mod download
+  go build -o secrets-manager
+  
+  # Frontend
+  cd frontend
+  git pull
+  npm install
+  npm run build
+  ```
+  
+  ## Contributors
+  
+  {contributors}
+  
+  ## Support
+  
+  - 📖 [Documentation](https://github.com/{owner}/{repo}/tree/main/docs)
+  - 🐛 [Report Issues](https://github.com/{owner}/{repo}/issues)
+  - 💬 [Discussions](https://github.com/{owner}/{repo}/discussions)
