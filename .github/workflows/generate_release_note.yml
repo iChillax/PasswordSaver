@@ -180,8 +180,9 @@ jobs:
 
       - name: Build Docker image
         run: |
-          IMAGE=${{ secrets.ACR_NAME }}.azurecr.io/housing_api_search:${{ needs.generate-tag.outputs.tag }}"
-          echo "IMAGE=$IMAGE"
+          TAG=${{ needs.generate-tag.outputs.tag }}
+          IMAGE=${{ secrets.ACR_NAME }}.azurecr.io/housing_api_search:${{ needs.generate-tag.outputs.tag }}
+          echo "Image: $IMAGE"
 
      
 
