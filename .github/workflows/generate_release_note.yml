@@ -15,7 +15,7 @@ jobs:
   # STAGE 0: VERSION CHECK
   # ============================================
   version-check:
-    runs-on: ubuntu-lastest
+    runs-on: self-hosted
     outputs:
       version: ${{ steps.version.outputs.version }}
       changelog_entry: ${{ steps.changelog.outputs.entry }}
@@ -132,7 +132,7 @@ jobs:
   # STAGE 0: GENERATE IMAGE TAG
   # ============================================
   generate-tag:
-    runs-on: ubuntu-lastest
+    runs-on: self-hosted
     outputs:
       tag: ${{ steps.vars.outputs.TAG }}
     steps:
@@ -145,7 +145,7 @@ jobs:
   # STAGE 1: UNIT TESTS
   # ============================================
   unit-tests:
-    runs-on: ubuntu-lastest
+    runs-on: self-hosted
     needs: version-check
     steps:
       - name: Checkout
@@ -163,7 +163,7 @@ jobs:
   # STAGE 2: INTEGRATION TESTS
   # ============================================
   integration-tests:
-    runs-on: ubuntu-lastest
+    runs-on: self-hosted
     needs: unit-tests
     steps:
       - name: Checkout
@@ -181,7 +181,7 @@ jobs:
   # STAGE 3: BUILD & SECURITY SCAN
   # ============================================
   build-and-scan:
-    runs-on: ubuntu-lastest
+    runs-on: self-hosted
     needs: [unit-tests, integration-tests, version-check, generate-tag]
     steps:
       - name: Checkout
@@ -198,7 +198,7 @@ jobs:
   # STAGE 4: DEPLOY TO PRODUCTION
   # ============================================
   deploy:
-    runs-on: ubuntu-lastest
+    runs-on: self-hosted
     needs: [build-and-scan, version-check, generate-tag]
     steps:
       - name: Checkout
