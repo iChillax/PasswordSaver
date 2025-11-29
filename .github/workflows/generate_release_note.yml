@@ -181,7 +181,7 @@ jobs:
       - name: Build Docker image
         run: |
           IMAGE=${{ secrets.ACR_NAME }}.azurecr.io/housing_api_search:${{ needs.generate-tag.outputs.tag }}"
-          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+          echo "IMAGE=$IMAGE"
 
      
 
