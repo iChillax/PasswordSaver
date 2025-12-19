@@ -259,14 +259,87 @@
                   </div>
 
                   <!-- All Tags -->
-                  <div v-if="secretDetail.tags && secretDetail.tags.length > 0">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Tags
-                    </label>
-                    <div class="flex flex-wrap gap-2">
-                      <span v-for="tag in secretDetail.tags" :key="tag" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        {{ tag }}
-                      </span>
+                  <div>
+                    <div class="flex items-center justify-between mb-2">
+                      <label class="block text-sm font-medium text-gray-700">
+                        Tags
+                      </label>
+                      <button
+                        v-if="!editingTags"
+                        @click.stop="startEditingTags"
+                        class="text-xs font-medium text-blue-600 hover:text-blue-900"
+                      >
+                        Edit Tags
+                      </button>
+                    </div>
+
+                    <!-- View Mode -->
+                    <div v-if="!editingTags">
+                      <div v-if="secretDetail.tags && secretDetail.tags.length > 0" class="flex flex-wrap gap-2">
+                        <span v-for="tag in secretDetail.tags" :key="tag" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          {{ tag }}
+                        </span>
+                      </div>
+                      <p v-else class="text-sm text-gray-500 italic">No tags</p>
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <div v-else class="space-y-2">
+                      <div class="flex flex-wrap gap-2 min-h-[2rem] p-2 border border-gray-300 rounded-md bg-white">
+                        <span
+                          v-for="(tag, index) in editedTags"
+                          :key="index"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
+                          {{ tag }}
+                          <button
+                            @click.stop="removeTag(index)"
+                            type="button"
+                            class="ml-1.5 inline-flex items-center justify-center w-4 h-4 text-green-600 hover:text-green-900"
+                            title="Remove tag"
+                          >
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                          </button>
+                        </span>
+                      </div>
+
+                      <div class="flex gap-2">
+                        <input
+                          v-model="newTag"
+                          @keyup.enter="addTag"
+                          type="text"
+                          placeholder="Add a tag and press Enter"
+                          class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <button
+                          @click.stop="addTag"
+                          type="button"
+                          class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          Add
+                        </button>
+                      </div>
+
+                      <div class="flex gap-2 justify-end">
+                        <button
+                          @click.stop="cancelEditingTags"
+                          :disabled="savingTags"
+                          class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          @click.stop="saveTags"
+                          :disabled="savingTags"
+                          class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                        >
+                          {{ savingTags ? 'Saving...' : 'Save Tags' }}
+                        </button>
+                      </div>
+
+                      <p v-if="tagError" class="text-sm text-red-600">{{ tagError }}</p>
                     </div>
                   </div>
 
