@@ -316,7 +316,7 @@
                         <button
                           @click.stop="addTag"
                           type="button"
-                          class="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          class="px-3 py-1 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                           Add
                         </button>
@@ -571,24 +571,24 @@
                   <button
                     @click.stop="addTag"
                     type="button"
-                    class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    class="px-3 py-2 text-sm font-medium text-white bg-emerald-500 rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     Add
                   </button>
                 </div>
 
-                <div class="flex gap-2 justify-end">
+                <div class="h-8 flex gap-2 justify-end">
                   <button
                     @click.stop="cancelEditingTags"
                     :disabled="savingTags"
-                    class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     @click.stop="saveTags"
                     :disabled="savingTags"
-                    class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    class="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
                     {{ savingTags ? 'Saving...' : 'Save Tags' }}
                   </button>
@@ -923,13 +923,7 @@ const saveTags = async () => {
   
   try {
     const updatedSecret = await secretsStore.updateSecret(expandedSecretId.value, {
-      name: secretDetail.value.name,
-      type: secretDetail.value.type,
-      value: secretDetail.value.value,
-      category: secretDetail.value.category,
-      tags: editedTags.value,
-      notes: secretDetail.value.notes,
-      metadata: secretDetail.value.metadata
+      tags: editedTags.value
     })
     
     // Update local secret with new data
