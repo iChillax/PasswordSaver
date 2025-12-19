@@ -36,17 +36,30 @@ JWT_SECRET=my-secret-jwt-key-12345
 
 ```bash
 cd dockerfiles
-docker-compose up
+docker-compose up -d mongodb
 ```
 
-Wait for all services to start (you'll see "listening on" messages).
+Wait for MongoDB to be ready.
 
-### 4. Access the Application
+### 4. Setup Ollama (Optional - for AI Chat)
+
+```bash
+./dockerfiles/setup-ollama.sh
+```
+
+This will:
+- Start Ollama service
+- Pull the Mistral model (~4GB)
+- Verify setup with test queries
+
+Skip this step if you don't need the AI chatbot feature yet.
+
+### 5. Access the Application
 
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:8080/api/v1
 - **MongoDB**: localhost:27017
-- **Ollama**: http://localhost:11434
+- **Ollama**: http://localhost:11434 (if enabled)
 
 ## First Steps
 
@@ -227,6 +240,8 @@ npm run dev
 - [Full Plan](./plan.md)
 - [Encryption Strategy](./docs/specs/encryption-strategy.md)
 - [Phase 1 Tasks](./docs/tasks/phase-1-tasks.md)
+- [Phase 2 Tasks](./docs/tasks/phase-2-tasks.md)
+- [Ollama Setup Guide](./docs/OLLAMA_SETUP.md)
 - [Implementation Summary](./docs/tasks/phase-1-implementation-summary.md)
 
 ## Support
