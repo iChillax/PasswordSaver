@@ -20,11 +20,15 @@
       <!-- Stats Card -->
       <div class="mb-6">
         <div class="bg-white overflow-hidden shadow rounded-lg">
-          <div class="px-4 py-5 sm:p-6">
+          <div class="px-4 py-5 sm:p-6 space-y-4">
+            <!-- Header with stats and button -->
             <div class="flex items-center justify-between">
               <div>
                 <dt class="text-sm font-medium text-gray-500 truncate">Total Secrets</dt>
                 <dd class="mt-1 text-3xl font-extrabold text-gray-900">{{ secrets.length }}</dd>
+                <p v-if="selectedCategories.length > 0 || selectedTags.length > 0" class="mt-1 text-sm text-gray-600">
+                  Showing {{ filteredSecrets.length }} filtered
+                </p>
               </div>
               <div class="flex-shrink-0">
                 <button 
@@ -35,6 +39,62 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                   </svg>
                   New Secret
+                </button>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <div v-if="secrets.length > 0" class="border-t border-gray-200 pt-4">
+              <!-- Category and Tag Filters on same line -->
+              <div v-if="availableCategories.length > 0 || availableTags.length > 0" class="flex flex-wrap gap-32">
+                <!-- Categories -->
+                <div v-if="availableCategories.length > 0" class="flex items-center gap-2">
+                  <span class="text-xs font-medium text-gray-600">Categories:</span>
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      v-for="category in availableCategories"
+                      :key="category"
+                      @click="selectedCategories.includes(category) ? selectedCategories = selectedCategories.filter(c => c !== category) : selectedCategories.push(category)"
+                      :class="[
+                        selectedCategories.includes(category) ? 'ring-2 ring-offset-2 ring-blue-500' : '',
+                        getCategoryColor(category).bg,
+                        getCategoryColor(category).text,
+                        'px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all'
+                      ]"
+                    >
+                      {{ category }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Tags -->
+                <div v-if="availableTags.length > 0" class="flex items-center gap-2">
+                  <span class="text-xs font-medium text-gray-600">Tags:</span>
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      v-for="tag in availableTags"
+                      :key="tag"
+                      @click="selectedTags.includes(tag) ? selectedTags = selectedTags.filter(t => t !== tag) : selectedTags.push(tag)"
+                      :class="[
+                        selectedTags.includes(tag) ? 'ring-2 ring-offset-2 ring-blue-500' : '',
+                        getTagColor(tag).bg,
+                        getTagColor(tag).text,
+                        'px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-all'
+                      ]"
+                    >
+                      {{ tag }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Clear Filters Button -->
+              <div v-if="selectedCategories.length > 0 || selectedTags.length > 0" class="pt-2">
+                <button
+                  @click="selectedCategories = []; selectedTags = []"
+                  class="text-xs text-blue-600 hover:text-blue-900 font-medium"
+                >
+                  Clear Filters
                 </button>
               </div>
             </div>
@@ -73,10 +133,27 @@
             </div>
           </div>
 
+          <!-- No results from filter -->
+          <div v-else-if="filteredSecrets.length === 0 && (selectedCategories.length > 0 || selectedTags.length > 0)" class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No secrets found</h3>
+            <p class="mt-1 text-sm text-gray-500">Try adjusting your filters.</p>
+            <div class="mt-6">
+              <button 
+                @click="selectedCategories = []; selectedTags = []"
+                class="text-sm text-blue-600 hover:text-blue-900 font-medium"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+
           <!-- Secrets grid -->
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-max">
             <div 
-              v-for="secret in secrets" 
+              v-for="secret in filteredSecrets" 
               :key="secret.id" 
               class="bg-white border border-gray-200 rounded-lg overflow-hidden transition-all hover:bg-gray-50"
               :class="{ 'ring-2 ring-blue-500': expandedSecretId === secret.id }"
@@ -659,7 +736,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useSecretsStore } from '../stores/secrets'
@@ -691,6 +768,50 @@ const editedTags = ref([])
 const newTag = ref('')
 const savingTags = ref(false)
 const tagError = ref('')
+
+// Filter state
+const selectedCategories = ref([])
+const selectedTags = ref([])
+
+// Computed properties for available categories and tags
+const availableCategories = computed(() => {
+  const categories = new Set()
+  secrets.value.forEach(secret => {
+    if (secret.category) {
+      categories.add(secret.category)
+    }
+  })
+  return Array.from(categories).sort()
+})
+
+const availableTags = computed(() => {
+  const tags = new Set()
+  secrets.value.forEach(secret => {
+    if (secret.tags && Array.isArray(secret.tags)) {
+      secret.tags.forEach(tag => tags.add(tag))
+    }
+  })
+  return Array.from(tags).sort()
+})
+
+// Filtered secrets based on selected categories and tags
+const filteredSecrets = computed(() => {
+  return secrets.value.filter(secret => {
+    // If no filters selected, show all
+    if (selectedCategories.value.length === 0 && selectedTags.value.length === 0) {
+      return true
+    }
+
+    // Check category filter
+    const categoryMatch = selectedCategories.value.length === 0 || selectedCategories.value.includes(secret.category)
+
+    // Check tag filter - secret must have at least one of the selected tags
+    const tagMatch = selectedTags.value.length === 0 || (secret.tags && secret.tags.some(tag => selectedTags.value.includes(tag)))
+
+    // Both filters must match (AND logic)
+    return categoryMatch && tagMatch
+  })
+})
 
 const loadSecrets = async () => {
   loading.value = true
