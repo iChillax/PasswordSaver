@@ -8,9 +8,9 @@
       <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
       <!-- Modal panel -->
-      <div class="relative inline-block align-middle bg-white rounded-lg text-left overflow-visible shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
+      <div class="relative inline-block align-middle bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
         <form @submit.prevent="handleSubmit">
-          <div class="bg-white rounded-lg px-4 pt-5 pb-4 sm:p-6 sm:pb-2">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-2">
             <div class="sm:flex sm:items-start">
               <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
@@ -49,11 +49,11 @@
                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     >
                       <option value="">Select type...</option>
+                      <option value="account">Account (Username + Password)</option>
                       <option value="password">Password</option>
                       <option value="token">Token</option>
-                      <option value="url">URL</option>
                       <option value="api_key">API Key</option>
-                      <option value="account">Account (Username + Password)</option>
+                      <option value="url">URL</option>
                       <option value="other">Other</option>
                     </select>
                   </div>

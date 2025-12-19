@@ -74,16 +74,16 @@
           </div>
 
           <!-- Secrets grid -->
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-max">
             <div 
               v-for="secret in secrets" 
               :key="secret.id" 
-              class="bg-white border border-gray-200 rounded-lg overflow-hidden transition-all"
+              class="bg-white border border-gray-200 rounded-lg overflow-hidden transition-all hover:bg-gray-50"
               :class="{ 'ring-2 ring-blue-500': expandedSecretId === secret.id }"
             >
               <!-- Card Header (Always Visible) -->
               <div 
-                class="p-4 cursor-pointer hover:bg-gray-50"
+                class="p-4 cursor-pointer "
                 @click.stop="toggleSecret(secret.id)"
               >
                 <div class="flex items-start justify-between">
@@ -93,12 +93,12 @@
                       <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {{ secret.type }}
                       </span>
-                      <span v-if="secret.category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <span v-if="secret.category" :class="[getCategoryColor(secret.category).bg, getCategoryColor(secret.category).text, 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium']">
                         {{ secret.category }}
                       </span>
                     </div>
                     <div v-if="secret.tags && secret.tags.length > 0" class="mt-2 flex flex-wrap gap-1">
-                      <span v-for="tag in secret.tags.slice(0, 3)" :key="tag" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                      <span v-for="tag in secret.tags.slice(0, 3)" :key="tag" :class="[getTagColor(tag).bg, getTagColor(tag).text, 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium']">
                         {{ tag }}
                       </span>
                       <span v-if="secret.tags.length > 3" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
@@ -147,9 +147,9 @@
                 </div>
               </div>
 
-              <!-- Expanded Details -->
+              <!-- Expanded Details - Hidden, shown in modal instead -->
               <div 
-                v-if="expandedSecretId === secret.id"
+                v-if="false"
                 class="border-t border-gray-200 bg-gray-50 p-4 space-y-4"
                 @click.stop
               >
@@ -276,7 +276,7 @@
                     <!-- View Mode -->
                     <div v-if="!editingTags">
                       <div v-if="secretDetail.tags && secretDetail.tags.length > 0" class="flex flex-wrap gap-2">
-                        <span v-for="tag in secretDetail.tags" :key="tag" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span v-for="tag in secretDetail.tags" :key="tag" :class="[getTagColor(tag).bg, getTagColor(tag).text, 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium']">
                           {{ tag }}
                         </span>
                       </div>
@@ -289,13 +289,13 @@
                         <span
                           v-for="(tag, index) in editedTags"
                           :key="index"
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          :class="[getTagColor(tag).bg, getTagColor(tag).text, 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium']"
                         >
                           {{ tag }}
                           <button
                             @click.stop="removeTag(index)"
                             type="button"
-                            class="ml-1.5 inline-flex items-center justify-center w-4 h-4 text-green-600 hover:text-green-900"
+                            :class="[getTagColor(tag).text.replace('text-', 'hover:text-').replace('-800', '-900'), 'ml-1.5 inline-flex items-center justify-center w-4 h-4']"
                             title="Remove tag"
                           >
                             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -305,35 +305,35 @@
                         </span>
                       </div>
 
-                      <div class="flex gap-2">
+                      <div class="h-8 flex gap-2">
                         <input
                           v-model="newTag"
                           @keyup.enter="addTag"
                           type="text"
                           placeholder="Add a tag and press Enter"
-                          class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          class="flex-1 px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                         <button
                           @click.stop="addTag"
                           type="button"
-                          class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          class="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                           Add
                         </button>
                       </div>
 
-                      <div class="flex gap-2 justify-end">
+                      <div class="h-8 flex gap-2 justify-end">
                         <button
                           @click.stop="cancelEditingTags"
                           :disabled="savingTags"
-                          class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                          class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                         >
                           Cancel
                         </button>
                         <button
                           @click.stop="saveTags"
                           :disabled="savingTags"
-                          class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                          class="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                         >
                           {{ savingTags ? 'Saving...' : 'Save Tags' }}
                         </button>
@@ -389,6 +389,258 @@
       </div>
     </div>
 
+    <!-- Expanded Secret Modal Overlay -->
+    <transition name="fade">
+      <div v-if="expandedSecretId" class="fixed inset-0 z-30 bg-gray-200 opacity-50 transition-opacity" @click="toggleSecret(null)"></div>
+    </transition>
+
+    <transition name="slide-up">
+      <div v-if="expandedSecretId && secretDetail" class="fixed bottom-1/4 left-1/2 transform -translate-x-1/2 z-40 bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto w-1/3">
+        <!-- Close button -->
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl rounded-b-none">
+          <h2 class="text-lg font-semibold text-gray-900">{{ secretDetail.name }}</h2>
+          <button @click="toggleSecret(null)" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal content -->
+        <div class="px-6 py-4 space-y-4">
+          <!-- Loading state -->
+          <div v-if="loadingDetail" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-2 text-sm text-gray-600">Loading details...</p>
+          </div>
+
+          <!-- Error state -->
+          <div v-else-if="detailError" class="rounded-md bg-red-50 p-4">
+            <p class="text-sm text-red-800">{{ detailError }}</p>
+          </div>
+
+          <!-- Secret details -->
+          <div v-else class="space-y-4">
+            <!-- Account Type Display -->
+            <template v-if="secretDetail.type === 'account'">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Username
+                </label>
+                <div class="relative">
+                  <input
+                    :value="getAccountUsername()"
+                    readonly
+                    type="text"
+                    class="block w-full px-3 py-2 pr-20 border border-gray-300 rounded-md bg-white text-gray-900 text-sm"
+                  />
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-2">
+                    <button
+                      @click.stop="copyToClipboard(getAccountUsername())"
+                      class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-900"
+                    >
+                      {{ copied ? 'Copied!' : 'Copy' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <div class="relative">
+                  <input
+                    :type="showValue ? 'text' : 'password'"
+                    :value="getAccountPassword()"
+                    readonly
+                    class="block w-full px-3 py-2 pr-24 border border-gray-300 rounded-md bg-white text-gray-900 text-sm"
+                  />
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-2 space-x-1">
+                    <button
+                      @click.stop="showValue = !showValue"
+                      class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-900"
+                    >
+                      {{ showValue ? 'Hide' : 'Show' }}
+                    </button>
+                    <button
+                      @click.stop="copyToClipboard(getAccountPassword())"
+                      class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-900"
+                    >
+                      {{ copied ? 'Copied!' : 'Copy' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Value (for non-account types) -->
+            <div v-else>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Secret Value
+              </label>
+              <div class="relative">
+                <input
+                  :type="showValue ? 'text' : 'password'"
+                  :value="secretDetail.value"
+                  readonly
+                  class="block w-full px-3 py-2 pr-24 border border-gray-300 rounded-md bg-white text-gray-900 text-sm"
+                />
+                <div class="absolute inset-y-0 right-0 flex items-center pr-2 space-x-1">
+                  <button
+                    @click.stop="showValue = !showValue"
+                    class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-900"
+                  >
+                    {{ showValue ? 'Hide' : 'Show' }}
+                  </button>
+                  <button
+                    @click.stop="copyToClipboard(secretDetail.value)"
+                    class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-900"
+                  >
+                    {{ copied ? 'Copied!' : 'Copy' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div v-if="secretDetail.notes">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Notes
+              </label>
+              <div class="bg-blue-50 border border-blue-200 rounded-md p-3">
+                <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ secretDetail.notes }}</p>
+              </div>
+            </div>
+
+            <!-- All Tags -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-gray-700">
+                  Tags
+                </label>
+                <button
+                  v-if="!editingTags"
+                  @click.stop="startEditingTags"
+                  class="text-xs font-medium text-blue-600 hover:text-blue-900"
+                >
+                  Edit Tags
+                </button>
+              </div>
+
+              <!-- View Mode -->
+              <div v-if="!editingTags">
+                <div v-if="secretDetail.tags && secretDetail.tags.length > 0" class="flex flex-wrap gap-2">
+                  <span v-for="tag in secretDetail.tags" :key="tag" :class="[getTagColor(tag).bg, getTagColor(tag).text, 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium']">
+                    {{ tag }}
+                  </span>
+                </div>
+                <p v-else class="text-sm text-gray-500 italic">No tags</p>
+              </div>
+
+              <!-- Edit Mode -->
+              <div v-else class="space-y-2">
+                <div class="flex flex-wrap gap-2 min-h-[2rem] p-2 border border-gray-300 rounded-md bg-white">
+                  <span
+                    v-for="(tag, index) in editedTags"
+                    :key="index"
+                    :class="[getTagColor(tag).bg, getTagColor(tag).text, 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium']"
+                  >
+                    {{ tag }}
+                    <button
+                      @click.stop="removeTag(index)"
+                      type="button"
+                      :class="[getTagColor(tag).text.replace('text-', 'hover:text-').replace('-800', '-900'), 'ml-1.5 inline-flex items-center justify-center w-4 h-4']"
+                      title="Remove tag"
+                    >
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+
+                <div class="flex gap-2">
+                  <input
+                    v-model="newTag"
+                    @keyup.enter="addTag"
+                    type="text"
+                    placeholder="Add a tag and press Enter"
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <button
+                    @click.stop="addTag"
+                    type="button"
+                    class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Add
+                  </button>
+                </div>
+
+                <div class="flex gap-2 justify-end">
+                  <button
+                    @click.stop="cancelEditingTags"
+                    :disabled="savingTags"
+                    class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    @click.stop="saveTags"
+                    :disabled="savingTags"
+                    class="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  >
+                    {{ savingTags ? 'Saving...' : 'Save Tags' }}
+                  </button>
+                </div>
+
+                <p v-if="tagError" class="text-sm text-red-600">{{ tagError }}</p>
+              </div>
+            </div>
+
+            <!-- Metadata -->
+            <div v-if="secretDetail.metadata && Object.keys(secretDetail.metadata).length > 0">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Additional Information
+              </label>
+              <div class="bg-white rounded-md p-3 space-y-2 border border-gray-200">
+                <div v-for="(value, key) in secretDetail.metadata" :key="key" class="flex justify-between text-sm">
+                  <span class="font-medium text-gray-500 capitalize">{{ key }}:</span>
+                  <a v-if="key === 'url'" :href="value" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-900 truncate ml-2">
+                    {{ value }}
+                  </a>
+                  <span v-else class="text-gray-900 truncate ml-2">{{ value }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Timestamps -->
+            <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
+              <div>
+                <label class="block text-xs font-medium text-gray-500">Created</label>
+                <p class="mt-1 text-sm text-gray-900">{{ formatDate(secretDetail.created_at) }}</p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-500">Updated</label>
+                <p class="mt-1 text-sm text-gray-900">{{ formatDate(secretDetail.updated_at) }}</p>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end space-x-3 pt-3 border-t border-gray-200 pb-6">
+              <button
+                @click.stop="handleDelete(expandedSecretId)"
+                :disabled="deleting"
+                class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-900 disabled:opacity-50"
+              >
+                {{ deleting ? 'Deleting...' : 'Delete' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- Create Secret Modal -->
     <CreateSecretModal 
       :show="showCreateModal" 
@@ -432,6 +684,13 @@ const deletingSecretId = ref(null)
 const showToast = ref(false)
 const toastType = ref('success')
 const toastMessage = ref('')
+
+// Tag editing state
+const editingTags = ref(false)
+const editedTags = ref([])
+const newTag = ref('')
+const savingTags = ref(false)
+const tagError = ref('')
 
 const loadSecrets = async () => {
   loading.value = true
@@ -587,6 +846,106 @@ const getAccountPassword = () => {
   return getAccountData().password || ''
 }
 
+// Tag color mapping
+const tagColors = [
+  { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-300' },
+  { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300' },
+  { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300' },
+  { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300' },
+  { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300' },
+  { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-300' },
+  { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-300' },
+  { bg: 'bg-cyan-100', text: 'text-cyan-800', border: 'border-cyan-300' },
+  { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-300' },
+  { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-300' },
+]
+
+const getTagColor = (tag) => {
+  // Generate a consistent hash for the tag
+  let hash = 0
+  for (let i = 0; i < tag.length; i++) {
+    const char = tag.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  const colorIndex = Math.abs(hash) % tagColors.length
+  return tagColors[colorIndex]
+}
+
+const getCategoryColor = (category) => {
+  // Generate a consistent hash for the category using same logic as tags
+  let hash = 0
+  for (let i = 0; i < category.length; i++) {
+    const char = category.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  const colorIndex = Math.abs(hash) % tagColors.length
+  return tagColors[colorIndex]
+}
+
+// Tag editing functions
+const startEditingTags = () => {
+  editedTags.value = [...(secretDetail.value?.tags || [])]
+  newTag.value = ''
+  tagError.value = ''
+  editingTags.value = true
+}
+
+const cancelEditingTags = () => {
+  editingTags.value = false
+  editedTags.value = []
+  newTag.value = ''
+  tagError.value = ''
+}
+
+const addTag = () => {
+  const tag = newTag.value.trim()
+  if (!tag) return
+  
+  if (editedTags.value.includes(tag)) {
+    tagError.value = 'Tag already exists'
+    return
+  }
+  
+  editedTags.value.push(tag)
+  newTag.value = ''
+  tagError.value = ''
+}
+
+const removeTag = (index) => {
+  editedTags.value.splice(index, 1)
+}
+
+const saveTags = async () => {
+  savingTags.value = true
+  tagError.value = ''
+  
+  try {
+    const updatedSecret = await secretsStore.updateSecret(expandedSecretId.value, {
+      name: secretDetail.value.name,
+      type: secretDetail.value.type,
+      value: secretDetail.value.value,
+      category: secretDetail.value.category,
+      tags: editedTags.value,
+      notes: secretDetail.value.notes,
+      metadata: secretDetail.value.metadata
+    })
+    
+    // Update local secret with new data
+    secretDetail.value = updatedSecret
+    editingTags.value = false
+    editedTags.value = []
+    newTag.value = ''
+    showToastMessage('success', 'Tags updated successfully!')
+  } catch (err) {
+    tagError.value = err || 'Failed to update tags'
+    showToastMessage('error', err || 'Failed to update tags')
+  } finally {
+    savingTags.value = false
+  }
+}
+
 const handleLogout = () => {
   authStore.logout()
   router.push('/login')
@@ -596,3 +955,34 @@ onMounted(() => {
   loadSecrets()
 })
 </script>
+
+<style scoped>
+/* Fade transition for overlay */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Slide up transition for modal */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.slide-up-enter-to,
+.slide-up-leave-from {
+  transform: translateY(0);
+  opacity: 1;
+}
+</style>

@@ -1,104 +1,69 @@
 services:
-  mongodb:
-    image: mongo:8.0
-    container_name: secrets_manager_mongodb
+
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: secrets_manager_ollama
+  #   platform: linux/arm64
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   networks:
+  #     - secrets_network
+  #   environment:
+  #     - OLLAMA_HOST=0.0.0.0:11434
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 30s
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: secrets_manager_backend
     platform: linux/arm64
     ports:
-      - "27017:27017"
+      - "8080:8080"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-password}
-      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-secrets_manager}
+      MONGODB_URI: mongodb://mongodb:27017
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-password_saver}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-6AFD65C811E2FA7EE74A5C3B3BE59A5D19CCBB94ADEF3549733D261E2FD6F570}
+      JWT_SECRET: ${JWT_SECRET:-50ccac8332e72363640552a68e6e1548}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-24}
+      # OLLAMA_API_URL: http://ollama:11434
+      GIN_MODE: ${GIN_MODE:-debug}
+    # depends_on:
+      # mongodb:
+        # condition: service_healthy
+      # ollama:
+      #   condition: service_healthy
+    networks:
+      - secrets_network
+      - database_mongodb-network
     volumes:
-      - mongodb_data:/data/db
-      - mongodb_config:/data/configdb
-    networks:
-      - secrets_network
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - ../backend:/app
 
-  mongo-express:
-    image: mongo-express
-    container_name: mongo-express
-    networks:
-      - secrets_network
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: secrets_manager_frontend
+    platform: linux/arm64
     ports:
-      - "8081:8081" # Exposes Mongo Express's default port
+      - "5173:5173"
     environment:
-      ME_CONFIG_MONGODB_SERVER: mongodb # Connects to the 'mongodb' service
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: password
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: password
+      VITE_API_URL: http://localhost:8080/api/v1
     depends_on:
-      - mongodb # Ensures MongoDB starts before Mongo Express
-
-  ollama:
-    image: ollama/ollama:latest
-    container_name: secrets_manager_ollama
-    platform: linux/arm64
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
+      - backend
     networks:
       - secrets_network
-    environment:
-      - OLLAMA_HOST=0.0.0.0:11434
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-
-  # backend:
-  #   build:
-  #     context: ../backend
-  #     dockerfile: Dockerfile
-  #   container_name: secrets_manager_backend
-  #   platform: linux/arm64
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     MONGODB_URI: mongodb://${MONGODB_USER:-admin}:${MONGODB_PASSWORD:-password}@mongodb:27017
-  #     MONGODB_DATABASE: ${MONGODB_DATABASE:-secrets_manager}
-  #     ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-  #     JWT_SECRET: ${JWT_SECRET}
-  #     JWT_EXPIRATION: ${JWT_EXPIRATION:-24}
-  #     # OLLAMA_API_URL: http://ollama:11434
-  #     GIN_MODE: ${GIN_MODE:-debug}
-  #   depends_on:
-  #     mongodb:
-  #       condition: service_healthy
-  #     # ollama:
-  #     #   condition: service_healthy
-  #   networks:
-  #     - secrets_network
-  #   volumes:
-  #     - ../backend:/app
-
-  # frontend:
-  #   build:
-  #     context: ../frontend
-  #     dockerfile: Dockerfile
-  #   container_name: secrets_manager_frontend
-  #   platform: linux/arm64
-  #   ports:
-  #     - "5173:5173"
-  #   environment:
-  #     VITE_API_URL: http://localhost:8080/api/v1
-  #   depends_on:
-  #     - backend
-  #   networks:
-  #     - secrets_network
-  #   volumes:
-  #     - ../frontend:/app
-  #     - /app/node_modules
-  #   command: npm run dev
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    command: npm run dev
 
 volumes:
   mongodb_data:
@@ -108,3 +73,5 @@ volumes:
 networks:
   secrets_network:
     driver: bridge
+  database_mongodb-network:
+    external: true
