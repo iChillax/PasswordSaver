@@ -24,6 +24,7 @@ type CreateSecretRequest struct {
 	Value    string            `json:"value" binding:"required"`
 	Category string            `json:"category"`
 	Tags     []string          `json:"tags"`
+	Notes    string            `json:"notes"`
 	Metadata map[string]string `json:"metadata"`
 }
 
@@ -33,6 +34,7 @@ type UpdateSecretRequest struct {
 	Value    string            `json:"value"`
 	Category string            `json:"category"`
 	Tags     []string          `json:"tags"`
+	Notes    string            `json:"notes"`
 	Metadata map[string]string `json:"metadata"`
 }
 
@@ -42,6 +44,7 @@ type SecretResponse struct {
 	Type      string            `json:"type"`
 	Category  string            `json:"category"`
 	Tags      []string          `json:"tags"`
+	Notes     string            `json:"notes"`
 	Metadata  map[string]string `json:"metadata"`
 	CreatedAt time.Time         `json:"created_at"`
 	UpdatedAt time.Time         `json:"updated_at"`
@@ -54,6 +57,7 @@ type SecretDetailResponse struct {
 	Value     string            `json:"value"`
 	Category  string            `json:"category"`
 	Tags      []string          `json:"tags"`
+	Notes     string            `json:"notes"`
 	Metadata  map[string]string `json:"metadata"`
 	CreatedAt time.Time         `json:"created_at"`
 	UpdatedAt time.Time         `json:"updated_at"`
@@ -112,6 +116,7 @@ func CreateSecret(c *gin.Context) {
 		Type:      req.Type,
 		Category:  req.Category,
 		Tags:      req.Tags,
+		Notes:     req.Notes,
 		Metadata:  req.Metadata,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -147,6 +152,7 @@ func CreateSecret(c *gin.Context) {
 		Type:      secret.Type,
 		Category:  secret.Category,
 		Tags:      secret.Tags,
+			Notes:     secret.Notes,
 		Metadata:  secret.Metadata,
 		CreatedAt: secret.CreatedAt,
 		UpdatedAt: secret.UpdatedAt,
@@ -204,6 +210,7 @@ func ListSecrets(c *gin.Context) {
 			Type:      secret.Type,
 			Category:  secret.Category,
 			Tags:      secret.Tags,
+			Notes:     secret.Notes,
 			Metadata:  secret.Metadata,
 			CreatedAt: secret.CreatedAt,
 			UpdatedAt: secret.UpdatedAt,
@@ -274,6 +281,7 @@ func GetSecret(c *gin.Context) {
 		Value:     decryptedValue,
 		Category:  secret.Category,
 		Tags:      secret.Tags,
+			Notes:     secret.Notes,
 		Metadata:  secret.Metadata,
 		CreatedAt: secret.CreatedAt,
 		UpdatedAt: secret.UpdatedAt,
@@ -348,6 +356,9 @@ func UpdateSecret(c *gin.Context) {
 	if req.Tags != nil {
 		secret.Tags = req.Tags
 	}
+	if req.Notes != "" {
+		secret.Notes = req.Notes
+	}
 	if req.Metadata != nil {
 		secret.Metadata = req.Metadata
 	}
@@ -379,6 +390,7 @@ func UpdateSecret(c *gin.Context) {
 		Type:      secret.Type,
 		Category:  secret.Category,
 		Tags:      secret.Tags,
+			Notes:     secret.Notes,
 		Metadata:  secret.Metadata,
 		CreatedAt: secret.CreatedAt,
 		UpdatedAt: secret.UpdatedAt,
@@ -489,6 +501,7 @@ func SearchSecrets(c *gin.Context) {
 			Type:      secret.Type,
 			Category:  secret.Category,
 			Tags:      secret.Tags,
+			Notes:     secret.Notes,
 			Metadata:  secret.Metadata,
 			CreatedAt: secret.CreatedAt,
 			UpdatedAt: secret.UpdatedAt,

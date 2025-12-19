@@ -11,10 +11,11 @@ type Secret struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	UserID         primitive.ObjectID `bson:"user_id" json:"user_id"`
 	Name           string             `bson:"name" json:"name"`
-	Type           string             `bson:"type" json:"type"` // password, token, url, api_key
+	Type           string             `bson:"type" json:"type"` // password, token, url, api_key, account
 	EncryptedValue string             `bson:"encrypted_value" json:"-"`
 	Category       string             `bson:"category" json:"category"`
 	Tags           []string           `bson:"tags" json:"tags"`
+	Notes          string             `bson:"notes" json:"notes"`
 	Metadata       map[string]string  `bson:"metadata" json:"metadata"`
 	CreatedAt      time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt      time.Time          `bson:"updated_at" json:"updated_at"`
@@ -48,6 +49,7 @@ func (s *Secret) ValidateType() bool {
 		"token":    true,
 		"url":      true,
 		"api_key":  true,
+		"account":  true,
 		"other":    true,
 	}
 	return validTypes[s.Type]

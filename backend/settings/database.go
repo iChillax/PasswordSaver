@@ -2,6 +2,7 @@ package settings
 
 import (
 	"context"
+	"net/url"
 	"time"
 
 	"github.com/labstack/gommon/log"
@@ -31,7 +32,18 @@ func establish_mongodb_connection() *mongo.Client {
 	// Establish database connection
 	_, existed := Evariables["MONGODB_URI"]
 	if !existed {
-		log.Fatal("The variable MONGODB_URI doesn't exist")
+		username := Evariables["MONGODB_USER"]
+		password := Evariables["MONGODB_PASSWORD"]
+		cluster := Evariables["MONGODB_SERVER_URL"]
+		uri := "mongodb+srv://" + url.QueryEscape(username) + ":" +
+			url.QueryEscape(password) + "@" + cluster
+		log.Info(uri)
+		client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+
+		if err != nil {
+			log.Fatal("Failed to connect to the database server, please check the URL variable")
+		}
+		return client
 	}
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(Evariables["MONGODB_URI"]))
 	if err != nil {

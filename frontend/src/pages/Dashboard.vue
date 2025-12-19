@@ -166,8 +166,61 @@
 
                 <!-- Secret details -->
                 <div v-else-if="secretDetail" class="space-y-4">
-                  <!-- Value -->
-                  <div>
+                  <!-- Account Type Display -->
+                  <template v-if="secretDetail.type === 'account'">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Username
+                      </label>
+                      <div class="relative">
+                        <input
+                          :value="getAccountUsername()"
+                          readonly
+                          type="text"
+                          class="block w-full px-3 py-2 pr-20 border border-gray-300 rounded-md bg-white text-gray-900 text-sm"
+                        />
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-2">
+                          <button
+                            @click.stop="copyToClipboard(getAccountUsername())"
+                            class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-900"
+                          >
+                            {{ copied ? 'Copied!' : 'Copy' }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Password
+                      </label>
+                      <div class="relative">
+                        <input
+                          :type="showValue ? 'text' : 'password'"
+                          :value="getAccountPassword()"
+                          readonly
+                          class="block w-full px-3 py-2 pr-24 border border-gray-300 rounded-md bg-white text-gray-900 text-sm"
+                        />
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-2 space-x-1">
+                          <button
+                            @click.stop="showValue = !showValue"
+                            class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-900"
+                          >
+                            {{ showValue ? 'Hide' : 'Show' }}
+                          </button>
+                          <button
+                            @click.stop="copyToClipboard(getAccountPassword())"
+                            class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-900"
+                          >
+                            {{ copied ? 'Copied!' : 'Copy' }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- Value (for non-account types) -->
+                  <div v-else>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                       Secret Value
                     </label>
@@ -192,6 +245,16 @@
                           {{ copied ? 'Copied!' : 'Copy' }}
                         </button>
                       </div>
+                    </div>
+                  </div>
+
+                  <!-- Notes -->
+                  <div v-if="secretDetail.notes">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Notes
+                    </label>
+                    <div class="bg-blue-50 border border-blue-200 rounded-md p-3">
+                      <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ secretDetail.notes }}</p>
                     </div>
                   </div>
 
@@ -428,6 +491,27 @@ const formatDate = (dateString) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+// Helper functions for account type
+const getAccountData = () => {
+  if (!secretDetail.value || secretDetail.value.type !== 'account') {
+    return { username: '', password: '' }
+  }
+  try {
+    return JSON.parse(secretDetail.value.value)
+  } catch (err) {
+    console.error('Failed to parse account data:', err)
+    return { username: '', password: '' }
+  }
+}
+
+const getAccountUsername = () => {
+  return getAccountData().username || ''
+}
+
+const getAccountPassword = () => {
+  return getAccountData().password || ''
 }
 
 const handleLogout = () => {
